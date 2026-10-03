@@ -6,12 +6,27 @@ I built it because a dead-letter queue with a few thousand messages is hard to a
 
 ## What it does
 
+![Failure groups for a queue](docs/overview.png)
+
+*24 dead-lettered messages from the local test setup, grouped into 3 failures.*
+
 - **Groups failures.** Each message gets a fingerprint from a normalised error signature (numbers, UUIDs and similar are replaced with placeholders) plus the structural shape of its JSON payload (field names and types, never values). 24 messages with 3 distinct causes show up as 3 rows.
 - **Replays per group.** A replay moves one group's messages to a destination queue. It supports a dry run, a messages-per-second limit, a maximum count, cancellation, and refuses to run twice at once for the same group.
 - **Keeps an audit log** of who started, finished or cancelled what.
 - **Optional AI summaries.** If you configure an OpenAI-compatible endpoint, an operator can ask for a plain-language description of a group. The model sees only the error signature and payload shape, never message bodies or attribute values. Off by default.
 - **Two roles.** `viewer` can look but sees no message bodies or attribute values. `operator` can replay, cancel and summarise.
 - **Ops basics.** `/healthz`, `/readyz`, and Prometheus metrics at `/metrics`.
+
+## Screenshots
+
+Replay with a dry run first, then live progress (a 7-message group at 0.5 messages/s, caught mid-run):
+
+![Replay in progress](docs/group-replaying.png)
+
+The audit log, and the read-only view where bodies and attribute values are hidden:
+
+![Audit log](docs/history.png)
+![Viewer role](docs/viewer.png)
 
 ## Running it
 
