@@ -1,0 +1,21 @@
+# Binaries and build output
+/bin/
+/dist/
+*.exe
+*.test
+*.out
+
+# Local state
+*.db
+*.db-wal
+*.db-shm
+/data/
+.env
+
+# Frontend
+/web/node_modules/
+/web/dist/
+
+# Editors
+.vscode/
+.idea/
