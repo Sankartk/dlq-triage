@@ -12,6 +12,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"strings"
 	"sync"
 	"time"
 
@@ -198,6 +199,18 @@ func (e *Engine) Cancel(jobID string) bool {
 		cancel()
 	}
 	return ok
+}
+
+// Running reports whether a real replay is in progress for the queue.
+func (e *Engine) Running(queue string) bool {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	for key := range e.running {
+		if strings.HasPrefix(key, queue+"/") {
+			return true
+		}
+	}
+	return false
 }
 
 // Wait blocks until all background jobs have finished.

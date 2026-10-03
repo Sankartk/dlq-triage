@@ -1,0 +1,19 @@
+{
+  "listen": "127.0.0.1:8099",
+  "database": "data/dev.db",
+  "aws": { "region": "us-east-1", "endpoint": "http://127.0.0.1:5055" },
+  "queues": [
+    {
+      "name": "loan-onboarding",
+      "dlqUrl": "http://127.0.0.1:5055/123456789012/loan-onboarding-dlq",
+      "destUrl": "http://127.0.0.1:5055/123456789012/loan-onboarding"
+    }
+  ],
+  "ingest": { "interval": "10s", "visibility": "5s" },
+  "auth": {
+    "tokens": [
+      { "name": "olga", "token": "env:DLQ_TRIAGE_OPERATOR_TOKEN", "role": "operator" },
+      { "name": "vera", "token": "env:DLQ_TRIAGE_VIEWER_TOKEN", "role": "viewer" }
+    ]
+  }
+}

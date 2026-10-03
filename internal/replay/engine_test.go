@@ -361,6 +361,32 @@ func TestOverlappingRealRunsAreRejected(t *testing.T) {
 	f.eng.Wait()
 }
 
+func TestRunningReportsActiveQueue(t *testing.T) {
+	f := newFixture(t, Config{})
+	f.seed("A", 3)
+	req := f.request("A")
+	req.RatePerSec = 1
+
+	if f.eng.Running("orders") {
+		t.Fatal("running before any job")
+	}
+	job, err := f.eng.Start(context.Background(), req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !f.eng.Running("orders") {
+		t.Fatal("expected running during a real job")
+	}
+	if f.eng.Running("ord") || f.eng.Running("other") {
+		t.Fatal("Running must match the whole queue name")
+	}
+	f.eng.Cancel(job.ID)
+	f.eng.Wait()
+	if f.eng.Running("orders") {
+		t.Fatal("still running after the job ended")
+	}
+}
+
 func TestCancelStopsJobAndRecordsIt(t *testing.T) {
 	f := newFixture(t, Config{})
 	f.seed("A", 5)
