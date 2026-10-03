@@ -1,0 +1,22 @@
+{
+  "listen": "0.0.0.0:8080",
+  "database": "/data/dlq-triage.db",
+  "aws": { "region": "us-east-1" },
+  "queues": [
+    {
+      "name": "orders",
+      "dlqUrl": "https://sqs.us-east-1.amazonaws.com/123456789012/orders-dlq",
+      "destUrl": "https://sqs.us-east-1.amazonaws.com/123456789012/orders"
+    }
+  ],
+  "ingest": { "interval": "60s", "visibility": "30s" },
+  "auth": {
+    "tokens": [
+      { "name": "oncall", "token": "env:DLQ_TRIAGE_OPERATOR_TOKEN", "role": "operator" },
+      { "name": "support", "token": "env:DLQ_TRIAGE_VIEWER_TOKEN", "role": "viewer" }
+    ]
+  },
+  "ai": {
+    "enabled": false
+  }
+}

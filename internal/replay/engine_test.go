@@ -387,6 +387,33 @@ func TestRunningReportsActiveQueue(t *testing.T) {
 	}
 }
 
+func TestProgressIsSavedWhileRunning(t *testing.T) {
+	f := newFixture(t, Config{})
+	f.seed("A", 5)
+	req := f.request("A")
+	req.RatePerSec = 1
+
+	job, err := f.eng.Start(context.Background(), req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Fewer than 10 messages are processed, so only the time-based save can
+	// make progress visible to someone watching the job.
+	f.clock.Advance(2 * time.Second)
+	deadline := time.Now().Add(3 * time.Second)
+	for time.Now().Before(deadline) {
+		if got := f.job(job.ID); got.Status == domain.JobRunning && got.Replayed > 0 {
+			f.eng.Cancel(job.ID)
+			f.eng.Wait()
+			return
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	f.eng.Cancel(job.ID)
+	f.eng.Wait()
+	t.Fatalf("running job never showed progress: %+v", f.job(job.ID))
+}
+
 func TestCancelStopsJobAndRecordsIt(t *testing.T) {
 	f := newFixture(t, Config{})
 	f.seed("A", 5)

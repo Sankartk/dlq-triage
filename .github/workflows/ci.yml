@@ -1,0 +1,52 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  go:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Build dashboard
+        working-directory: web
+        run: |
+          npm ci
+          npm run build
+      - name: gofmt
+        run: test -z "$(gofmt -l .)"
+      - run: go vet ./...
+      - name: Unit tests (race detector on)
+        run: go test -race -count=1 -timeout 300s ./...
+
+  integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Start an SQS emulator (moto)
+        run: |
+          pip install "moto[server]"
+          moto_server -H 127.0.0.1 -p 5055 &
+          for i in $(seq 1 30); do curl -sf http://127.0.0.1:5055/moto-api/ >/dev/null && break; sleep 1; done
+      - name: Integration tests
+        env:
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+          DLQ_TRIAGE_SQS_ENDPOINT: http://127.0.0.1:5055
+        run: go test -tags integration -race -count=1 -timeout 300s ./internal/queue/... ./internal/e2e/...

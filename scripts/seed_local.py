@@ -15,6 +15,8 @@ os.environ.setdefault("AWS_SECRET_ACCESS_KEY", "test")
 sqs = boto3.client("sqs", region_name="us-east-1", endpoint_url=ENDPOINT)
 dlq = sqs.create_queue(QueueName="loan-onboarding-dlq")["QueueUrl"]
 sqs.create_queue(QueueName="loan-onboarding")
+for url in (dlq, sqs.get_queue_url(QueueName="loan-onboarding")["QueueUrl"]):
+    sqs.purge_queue(QueueUrl=url)
 
 
 def fail(body, error, **extra):

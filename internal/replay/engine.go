@@ -252,6 +252,7 @@ func (e *Engine) execute(ctx context.Context, req Request, job domain.ReplayJob,
 	}
 	limiter := rate.NewLimiter(rate.Limit(req.RatePerSec), 1)
 	lastProgress := e.now()
+	lastSave := lastProgress
 	receiveErrs := 0
 	sinceSave := 0
 	var failure string
@@ -306,8 +307,9 @@ loop:
 				remaining[m.ID] = struct{}{}
 				break loop
 			}
-			if sinceSave++; sinceSave >= 10 {
+			if sinceSave++; sinceSave >= 10 || e.now().Sub(lastSave) >= time.Second {
 				sinceSave = 0
+				lastSave = e.now()
 				e.save(job)
 			}
 			if err := limiter.Wait(ctx); err != nil {
