@@ -157,7 +157,7 @@ func TestScanReportsQueueErrors(t *testing.T) {
 }
 
 func TestRunScansPeriodicallyUntilCancelled(t *testing.T) {
-	ing, mem, st := setup(t, Config{Visibility: time.Millisecond, Interval: 20 * time.Millisecond})
+	ing, mem, st := setup(t, Config{Visibility: time.Minute, Interval: 20 * time.Millisecond})
 	mem.Seed(url, failure("boom", `{}`))
 	var scans atomic.Int32
 	ing.OnScan = func(string, Result, error) { scans.Add(1) }
