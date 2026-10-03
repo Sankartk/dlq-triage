@@ -132,6 +132,8 @@ func (s *SQLite) migrate(ctx context.Context) error {
 
 func (s *SQLite) Close() error { return s.db.Close() }
 
+func (s *SQLite) Ping(ctx context.Context) error { return s.db.PingContext(ctx) }
+
 const timeFmt = time.RFC3339Nano
 
 func ts(t time.Time) string { return t.UTC().Format(timeFmt) }

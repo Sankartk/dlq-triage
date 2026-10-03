@@ -99,6 +99,9 @@ type Engine struct {
 	cancel  context.CancelFunc
 	wg      sync.WaitGroup
 
+	// OnFinish, when set, is called once for every finished non-dry-run job.
+	OnFinish func(domain.ReplayJob)
+
 	mu      sync.Mutex
 	running map[string]string             // "queue/group" -> job id
 	cancels map[string]context.CancelFunc // job id -> cancel
@@ -327,6 +330,9 @@ loop:
 	}[job.Status]
 	e.audit(context.WithoutCancel(ctx), req.Actor, action, job,
 		fmt.Sprintf("status=%s replayed=%d skipped=%d failed=%d", job.Status, job.Replayed, job.Skipped, job.Failed))
+	if e.OnFinish != nil {
+		e.OnFinish(job)
+	}
 }
 
 type outcome int

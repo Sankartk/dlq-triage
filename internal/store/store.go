@@ -56,5 +56,8 @@ type Store interface {
 	AppendAudit(ctx context.Context, e domain.AuditEntry) error
 	ListAudit(ctx context.Context, queue string, limit int) ([]domain.AuditEntry, error)
 
+	// Ping checks that the database is reachable.
+	Ping(ctx context.Context) error
+
 	Close() error
 }
