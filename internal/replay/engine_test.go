@@ -68,7 +68,7 @@ func (f *fixture) seed(group string, n int) []string {
 	f.t.Helper()
 	var ids []string
 	for i := 0; i < n; i++ {
-		m := domain.Message{Body: fmt.Sprintf(`{"n":%d}`, i), Attributes: map[string]string{"ErrorMessage": "boom"}, ReceiveCount: 5}
+		m := domain.Message{Body: fmt.Sprintf(`{"n":%d}`, i), Attributes: map[string]domain.Attribute{"ErrorMessage": domain.StringAttr("boom")}, ReceiveCount: 5}
 		id := f.mem.Seed(dlqURL, m)[0]
 		_, err := f.st.UpsertMessage(context.Background(), domain.StoredMessage{
 			Queue: "orders", ID: id, GroupKey: group, Body: m.Body, Attributes: m.Attributes,
@@ -178,10 +178,10 @@ func TestReplayTagsAttributesAndKeepsBody(t *testing.T) {
 	if len(out) != 1 {
 		t.Fatalf("destination = %+v", out)
 	}
-	if out[0].Body != `{"n":0}` || out[0].Attributes["ErrorMessage"] != "boom" {
+	if out[0].Body != `{"n":0}` || out[0].Attributes["ErrorMessage"].Value != "boom" {
 		t.Fatalf("body or attributes changed: %+v", out[0])
 	}
-	if out[0].Attributes["x-dlq-triage-original-id"] != ids[0] || out[0].Attributes["x-dlq-triage-job"] != job.ID {
+	if out[0].Attributes["x-dlq-triage-original-id"].Value != ids[0] || out[0].Attributes["x-dlq-triage-job"].Value != job.ID {
 		t.Fatalf("tracing attributes missing: %+v", out[0].Attributes)
 	}
 }
@@ -240,7 +240,7 @@ func TestSendFailureLeavesMessageInDLQAndFailsJob(t *testing.T) {
 	ids := f.seed("A", 4)
 	poison := ids[1]
 	f.mem.FailSend = func(_ string, m domain.Message) error {
-		if m.Attributes["x-dlq-triage-original-id"] == poison {
+		if m.Attributes["x-dlq-triage-original-id"].Value == poison {
 			return errors.New("destination unavailable")
 		}
 		return nil

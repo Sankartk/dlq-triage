@@ -362,8 +362,8 @@ func (e *Engine) replayOne(ctx context.Context, req Request, job domain.ReplayJo
 	out.Attributes = copyAttrs(m.Attributes)
 	if e.cfg.TagAttributes {
 		if len(out.Attributes)+2 <= maxSQSAttributes {
-			out.Attributes["x-dlq-triage-original-id"] = m.ID
-			out.Attributes["x-dlq-triage-job"] = job.ID
+			out.Attributes["x-dlq-triage-original-id"] = domain.StringAttr(m.ID)
+			out.Attributes["x-dlq-triage-job"] = domain.StringAttr(job.ID)
 		}
 	}
 	if _, err := e.queue.Send(ctx, req.Queue.DestURL, out, m.ID); err != nil {
@@ -411,8 +411,8 @@ func (e *Engine) sleep(ctx context.Context, d time.Duration) bool {
 	}
 }
 
-func copyAttrs(in map[string]string) map[string]string {
-	out := make(map[string]string, len(in)+2)
+func copyAttrs(in map[string]domain.Attribute) map[string]domain.Attribute {
+	out := make(map[string]domain.Attribute, len(in)+2)
 	for k, v := range in {
 		out[k] = v
 	}

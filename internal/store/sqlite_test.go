@@ -25,7 +25,7 @@ func newStore(t *testing.T) *SQLite {
 func msg(id, group string, at time.Time) domain.StoredMessage {
 	return domain.StoredMessage{
 		Queue: "q", ID: id, GroupKey: group, Body: `{"id":"` + id + `"}`,
-		Attributes: map[string]string{"ErrorMessage": "boom"}, ReceiveCount: 5,
+		Attributes: map[string]domain.Attribute{"ErrorMessage": domain.StringAttr("boom"), "Amount": {DataType: "Number", Value: "42"}}, ReceiveCount: 5,
 		SentAt: at.Add(-time.Hour), IngestedAt: at,
 	}
 }
@@ -59,8 +59,11 @@ func TestUpsertIsIdempotentAndReportsCreation(t *testing.T) {
 	if len(msgs) != 1 || msgs[0].ReceiveCount != 9 {
 		t.Fatalf("receive count not refreshed: %+v", msgs)
 	}
-	if msgs[0].Attributes["ErrorMessage"] != "boom" || msgs[0].SentAt.IsZero() {
+	if msgs[0].Attributes["ErrorMessage"].Value != "boom" || msgs[0].SentAt.IsZero() {
 		t.Fatalf("attributes or sent_at lost: %+v", msgs[0])
+	}
+	if a := msgs[0].Attributes["Amount"]; a.DataType != "Number" || a.Value != "42" {
+		t.Fatalf("attribute data type lost: %+v", a)
 	}
 }
 

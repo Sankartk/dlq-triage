@@ -163,8 +163,8 @@ func join(path, key string) string {
 
 func extractError(msg domain.Message, cfg Config) string {
 	for _, name := range cfg.ErrorAttributes {
-		if v, ok := msg.Attributes[name]; ok && strings.TrimSpace(v) != "" {
-			return v
+		if a, ok := msg.Attributes[name]; ok && strings.TrimSpace(a.Value) != "" {
+			return a.Value
 		}
 	}
 	if len(cfg.ErrorBodyPaths) == 0 {

@@ -81,7 +81,7 @@ func TestComputeUsesAttributeThenBody(t *testing.T) {
 
 	fromAttr := Compute(domain.Message{
 		Body:       `{"id":"1"}`,
-		Attributes: map[string]string{"ErrorMessage": "Loan 7 not found"},
+		Attributes: map[string]domain.Attribute{"ErrorMessage": domain.StringAttr("Loan 7 not found")},
 	}, cfg)
 	if fromAttr.ErrorSig != "Loan <n> not found" {
 		t.Fatalf("attribute signature = %q", fromAttr.ErrorSig)
@@ -103,7 +103,7 @@ func TestComputeUsesAttributeThenBody(t *testing.T) {
 func TestComputeSameFailureSameKeyDifferentFailureDifferentKey(t *testing.T) {
 	cfg := Config{ErrorAttributes: []string{"ErrorMessage"}}
 	mk := func(id, errText, body string) domain.Message {
-		return domain.Message{ID: id, Body: body, Attributes: map[string]string{"ErrorMessage": errText}}
+		return domain.Message{ID: id, Body: body, Attributes: map[string]domain.Attribute{"ErrorMessage": domain.StringAttr(errText)}}
 	}
 	a := Compute(mk("m1", "Loan 1 not found", `{"loan":"L1"}`), cfg)
 	b := Compute(mk("m2", "Loan 2 not found", `{"loan":"L2"}`), cfg)
@@ -126,7 +126,7 @@ func TestComputeSameFailureSameKeyDifferentFailureDifferentKey(t *testing.T) {
 
 func TestComputeIsStable(t *testing.T) {
 	cfg := Config{ErrorAttributes: []string{"e"}}
-	m := domain.Message{Body: `{"a":1,"b":{"c":"x"}}`, Attributes: map[string]string{"e": "boom 5"}}
+	m := domain.Message{Body: `{"a":1,"b":{"c":"x"}}`, Attributes: map[string]domain.Attribute{"e": domain.StringAttr("boom 5")}}
 	first := Compute(m, cfg)
 	for i := 0; i < 50; i++ {
 		if got := Compute(m, cfg); got != first {

@@ -3,15 +3,25 @@ package domain
 
 import "time"
 
+// Attribute is a message attribute with its SQS data type, so that replays
+// keep Number and Binary attributes intact. Binary values are base64 encoded.
+type Attribute struct {
+	DataType string `json:"t"` // "String", "Number" or "Binary" (with an optional custom suffix)
+	Value    string `json:"v"`
+}
+
+// StringAttr builds a String attribute.
+func StringAttr(v string) Attribute { return Attribute{DataType: "String", Value: v} }
+
 // Message is a dead-lettered message as seen by the service.
 type Message struct {
-	ID           string            // queue-assigned message id; stable across receives
-	Body         string            // raw payload
-	Attributes   map[string]string // string message attributes
-	GroupID      string            // FIFO message group id, empty for standard queues
-	ReceiveCount int               // approximate receive count reported by the queue
-	SentAt       time.Time         // when the message was first sent, if the queue reports it
-	Handle       string            // receipt handle; only valid for the receive that returned it
+	ID           string               // queue-assigned message id; stable across receives
+	Body         string               // raw payload
+	Attributes   map[string]Attribute // message attributes
+	GroupID      string               // FIFO message group id, empty for standard queues
+	ReceiveCount int                  // approximate receive count reported by the queue
+	SentAt       time.Time            // when the message was first sent, if the queue reports it
+	Handle       string               // receipt handle; only valid for the receive that returned it
 }
 
 // Group is a set of dead-lettered messages that failed the same way.
@@ -35,7 +45,7 @@ type StoredMessage struct {
 	ID           string
 	GroupKey     string
 	Body         string
-	Attributes   map[string]string
+	Attributes   map[string]Attribute
 	GroupID      string
 	ReceiveCount int
 	SentAt       time.Time
